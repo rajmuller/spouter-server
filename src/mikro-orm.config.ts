@@ -4,7 +4,6 @@ import path from "path";
 import { Post } from "./entities/Post";
 import { __prod__ } from "./constants";
 
-console.log("dirname: ", __dirname)
 const mikroOrmConfig = {
   migrations: {
     path: path.join(__dirname, "./migrations"), // path to the folder with migrations

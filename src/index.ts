@@ -9,5 +9,4 @@ const main = async () => {
   const post = orm.em.create(Post, { title: "my first title" });
   await orm.em.persistAndFlush(post);
 };
-
 main();
