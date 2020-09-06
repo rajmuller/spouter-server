@@ -1,7 +1,7 @@
 import { MikroORM } from "@mikro-orm/core";
 import path from "path";
 
-import { Post } from "./entities/Post";
+import { Post, User } from "./entities";
 import { __prod__ } from "./constants";
 
 const mikroOrmConfig = {
@@ -10,7 +10,7 @@ const mikroOrmConfig = {
     pattern: /^[\w-]+\d+\.[jt]s$/, // regex pattern for the migration files
   },
   dbName: "spouter",
-  entities: [Post],
+  entities: [Post, User],
   user: "rrated",
   password: "Dead7Field",
   type: "postgresql",
