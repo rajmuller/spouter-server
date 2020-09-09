@@ -9,6 +9,7 @@ import {
   Resolver,
 } from "type-graphql";
 import Argon2 from "argon2";
+import { EntityManager } from "@mikro-orm/postgresql";
 
 import { User } from "../entities";
 import { MyContext } from "../types";
@@ -25,7 +26,7 @@ class UsernamePasswordInput {
 @ObjectType()
 class FieldError {
   @Field(() => [String])
-  field: string[];
+  fields: string[];
 
   @Field()
   message: string;
@@ -67,7 +68,7 @@ class UserResolver {
       return {
         errors: [
           {
-            field: ["username"],
+            fields: ["username"],
             message: "length at least 4",
           },
         ],
@@ -78,48 +79,50 @@ class UserResolver {
       return {
         errors: [
           {
-            field: ["password"],
+            fields: ["password"],
             message: "length at least 6 ",
           },
         ],
       };
     }
 
-    if (!password.match(/[A-Z]/g)) {
-      return {
-        errors: [
-          {
-            field: ["password"],
-            message: "at least one uppercase letter",
-          },
-        ],
-      };
-    }
+    // if (!password.match(/[A-Z]/g)) {
+    //   return {
+    //     errors: [
+    //       {
+    //         fields: ["password"],
+    //         message: "at least one uppercase letter",
+    //       },
+    //     ],
+    //   };
+    // }
 
     const hashedPassword = await Argon2.hash(password);
-    const user = em.create(User, { username, password: hashedPassword });
     try {
-      await em.persistAndFlush(user);
+      await (em as EntityManager)
+        .createQueryBuilder(User)
+        .getKnexQuery()
+        .insert({
+          username,
+          password: hashedPassword,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning("*");
     } catch (err) {
+      console.log("err: ", err);
       if (err.code === "23505") {
         return {
           errors: [
             {
-              field: ["username"],
+              fields: ["username"],
               message: "already taken",
             },
           ],
         };
       }
-      return {
-        errors: [
-          {
-            field: ["unknown"],
-            message: err.toString(),
-          },
-        ],
-      };
     }
+    const user = (await em.findOne(User, { username })) as User;
     return {
       user,
     };
@@ -135,7 +138,7 @@ class UserResolver {
       return {
         errors: [
           {
-            field: ["username", "password"],
+            fields: ["username", "password"],
             message: "wrong username or password",
           },
         ],
@@ -147,13 +150,12 @@ class UserResolver {
       return {
         errors: [
           {
-            field: ["username", "password"],
+            fields: ["username", "password"],
             message: "wrong username or password",
           },
         ],
       };
     }
-
     req.session.userId = user.id;
 
     return {
