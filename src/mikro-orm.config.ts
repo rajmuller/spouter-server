@@ -2,7 +2,7 @@ import { MikroORM } from "@mikro-orm/core";
 import path from "path";
 
 import { Post, User } from "./entities";
-import { __prod__ } from "./constants";
+import { PRODUCTION } from "./constants";
 
 const mikroOrmConfig = {
   migrations: {
@@ -14,7 +14,7 @@ const mikroOrmConfig = {
   user: "rrated",
   password: "Dead7Field",
   type: "postgresql",
-  debug: !__prod__,
+  debug: !PRODUCTION,
 } as Parameters<typeof MikroORM.init>[0];
 
 export default mikroOrmConfig;

@@ -13,6 +13,7 @@ import { EntityManager } from "@mikro-orm/postgresql";
 
 import { User } from "../entities";
 import { MyContext } from "../types";
+import { COOKIE_NAME } from "../constants";
 
 @InputType()
 class UsernamePasswordInput {
@@ -161,6 +162,20 @@ class UserResolver {
     return {
       user,
     };
+  }
+
+  @Mutation(() => Boolean)
+  async logout(@Ctx() { req, res }: MyContext): Promise<boolean> {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        if (err) {
+          console.log("err: ", err);
+          return resolve(false);
+        }
+        res.clearCookie(COOKIE_NAME);
+        return resolve(true);
+      })
+    );
   }
 }
 

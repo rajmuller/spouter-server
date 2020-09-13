@@ -10,7 +10,7 @@ import cors from "cors";
 
 import { PostResolver, UserResolver } from "./resolvers";
 import mikroOrmConfig from "./mikro-orm.config";
-import { __prod__ } from "./constants";
+import { PRODUCTION, COOKIE_NAME } from "./constants";
 
 const main = async () => {
   const orm = await MikroORM.init(mikroOrmConfig);
@@ -30,7 +30,7 @@ const main = async () => {
 
   app.use(
     session({
-      name: "qid",
+      name: COOKIE_NAME,
       store: new RedisStore({ client: redisClient }),
       // TODO: change this
       secret: "TODO please change me later to env var",
@@ -38,7 +38,7 @@ const main = async () => {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: true,
         sameSite: "lax", // CSRF
-        secure: __prod__, // cookie only works in https
+        secure: PRODUCTION, // cookie only works in https
       },
       saveUninitialized: false,
       resave: false,
