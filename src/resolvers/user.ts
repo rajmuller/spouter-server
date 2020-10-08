@@ -2,7 +2,6 @@ import {
   Arg,
   Ctx,
   Field,
-  InputType,
   Mutation,
   ObjectType,
   Query,
@@ -11,27 +10,14 @@ import {
 import Argon2 from "argon2";
 import { EntityManager } from "@mikro-orm/postgresql";
 
+import { validateRegister } from "../util/resolverValidations";
 import { User } from "../entities";
 import { MyContext } from "../types";
 import { COOKIE_NAME } from "../constants";
+import { isEmail } from "../util";
 
-@InputType()
-class UsernamePasswordInput {
-  @Field()
-  username: string;
-
-  @Field()
-  password: string;
-}
-
-@ObjectType()
-class FieldError {
-  @Field(() => [String])
-  fields: string[];
-
-  @Field()
-  message: string;
-}
+import { Credentials } from "./Credentials";
+import { FieldError } from "./FieldError";
 
 @ObjectType()
 class UserResponse {
@@ -63,40 +49,12 @@ class UserResolver {
   @Mutation(() => UserResponse)
   async register(
     @Ctx() { em }: MyContext,
-    @Arg("data") { username, password }: UsernamePasswordInput
+    @Arg("data") { username, email, password }: Credentials
   ): Promise<UserResponse> {
-    if (username.length <= 3) {
-      return {
-        errors: [
-          {
-            fields: ["username"],
-            message: "length at least 4",
-          },
-        ],
-      };
+    const errors = validateRegister({ username, email, password });
+    if (errors) {
+      return { errors };
     }
-
-    if (password.length <= 5) {
-      return {
-        errors: [
-          {
-            fields: ["password"],
-            message: "length at least 6 ",
-          },
-        ],
-      };
-    }
-
-    // if (!password.match(/[A-Z]/g)) {
-    //   return {
-    //     errors: [
-    //       {
-    //         fields: ["password"],
-    //         message: "at least one uppercase letter",
-    //       },
-    //     ],
-    //   };
-    // }
 
     const hashedPassword = await Argon2.hash(password);
     try {
@@ -105,6 +63,7 @@ class UserResolver {
         .getKnexQuery()
         .insert({
           username,
+          email,
           password: hashedPassword,
           created_at: new Date(),
           updated_at: new Date(),
@@ -132,9 +91,15 @@ class UserResolver {
   @Mutation(() => UserResponse)
   async login(
     @Ctx() { em, req }: MyContext,
-    @Arg("data") { username, password }: UsernamePasswordInput
+    @Arg("usernameOrEmail") usernameOrEmail: string,
+    @Arg("password") password: string
   ): Promise<UserResponse> {
-    const user = await em.findOne(User, { username });
+    const user = await em.findOne(
+      User,
+      isEmail(usernameOrEmail)
+        ? { email: usernameOrEmail }
+        : { username: usernameOrEmail }
+    );
     if (!user) {
       return {
         errors: [
@@ -176,6 +141,16 @@ class UserResolver {
         return resolve(true);
       })
     );
+  }
+
+  @Mutation(() => Boolean)
+  async forgotPassword(
+    @Ctx() { em }: MyContext,
+    @Arg("email") email: string
+  ): Promise<boolean> {
+    const user = await em.findOne(User, {});
+    console.log("user: ", user, email);
+    return true;
   }
 }
 
