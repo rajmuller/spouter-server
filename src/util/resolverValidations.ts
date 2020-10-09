@@ -7,31 +7,26 @@ export const validateRegister = ({
   username,
   password,
 }: Credentials): { fields: string[]; message: string }[] | null => {
+  const errors = [];
   if (username.length <= 3) {
-    return [
-      {
-        fields: ["username"],
-        message: "length at least 4",
-      },
-    ];
+    errors.push({
+      fields: ["username"],
+      message: "length at least 4",
+    });
   }
 
-  if (isEmail(email)) {
-    return [
-      {
-        fields: ["email"],
-        message: "not valid email address ",
-      },
-    ];
+  if (!isEmail(email)) {
+    errors.push({
+      fields: ["email"],
+      message: "not valid email address ",
+    });
   }
 
   if (password.length <= 5) {
-    return [
-      {
-        fields: ["password"],
-        message: "length at least 6 ",
-      },
-    ];
+    errors.push({
+      fields: ["password"],
+      message: "length at least 6 ",
+    });
   }
 
   // if (!password.match(/[A-Z]/g)) {
@@ -43,6 +38,8 @@ export const validateRegister = ({
   //       },
   //     ]
   // }
-
+  if (errors.length) {
+    return errors;
+  }
   return null;
 };

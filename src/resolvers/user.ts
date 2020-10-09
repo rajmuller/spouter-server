@@ -14,7 +14,7 @@ import { validateRegister } from "../util/resolverValidations";
 import { User } from "../entities";
 import { MyContext } from "../types";
 import { COOKIE_NAME } from "../constants";
-import { isEmail } from "../util";
+import { isEmail, sendEmail } from "../util";
 
 import { Credentials } from "./Credentials";
 import { FieldError } from "./FieldError";
@@ -104,8 +104,8 @@ class UserResolver {
       return {
         errors: [
           {
-            fields: ["username", "password"],
-            message: "wrong username or password",
+            fields: ["usernameOrEmail", "password"],
+            message: "wrong credentials",
           },
         ],
       };
@@ -116,8 +116,8 @@ class UserResolver {
       return {
         errors: [
           {
-            fields: ["username", "password"],
-            message: "wrong username or password",
+            fields: ["usernameOrEmail", "password"],
+            message: "wrong credentials",
           },
         ],
       };
@@ -145,11 +145,17 @@ class UserResolver {
 
   @Mutation(() => Boolean)
   async forgotPassword(
-    @Ctx() { em }: MyContext,
-    @Arg("email") email: string
-  ): Promise<boolean> {
+    @Ctx() { em }: MyContext
+  ): // @Arg("email") email: string
+  Promise<boolean> {
     const user = await em.findOne(User, {});
-    console.log("user: ", user, email);
+    if (!user) {
+      return false;
+    }
+
+    // const token = 'kdmldbnmSDG:Lsdlgn:"sdfg;lsg';
+
+    // async sendEmail(email, `<a> href="http://localhost:7777/change-password/${token}">reset oassword</a>`, "asd")
     return true;
   }
 }

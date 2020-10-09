@@ -3,12 +3,12 @@ import express from "express";
 import { MikroORM } from "@mikro-orm/core";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
-import redis from "redis";
+import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import cors from "cors";
 
-import { PostResolver, UserResolver } from "./resolvers";
+import { postResolver, userResolver } from "./resolvers";
 import mikroOrmConfig from "./mikro-orm.config";
 import { PRODUCTION, COOKIE_NAME } from "./constants";
 
@@ -18,7 +18,7 @@ const main = async () => {
 
   const app = express();
   const RedisStore = connectRedis(session);
-  const redisClient = redis.createClient();
+  const redis = Redis();
 
   app.use(
     cors({
@@ -31,7 +31,7 @@ const main = async () => {
   app.use(
     session({
       name: COOKIE_NAME,
-      store: new RedisStore({ client: redisClient }),
+      store: new RedisStore({ client: redis }),
       // TODO: change this
       secret: "TODO please change me later to env var",
       cookie: {
@@ -47,7 +47,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [PostResolver, UserResolver],
+      resolvers: [postResolver, userResolver],
       validate: false,
     }),
     context: ({ req, res }) => ({ em: orm.em, req, res }),

@@ -11,8 +11,8 @@ const mikroOrmConfig = {
   },
   dbName: "spouter",
   entities: [Post, User],
-  user: "rrated",
-  password: "Dead7Field",
+  user: "rajfta",
+  password: "deadfield",
   type: "postgresql",
   debug: !PRODUCTION,
 } as Parameters<typeof MikroORM.init>[0];
